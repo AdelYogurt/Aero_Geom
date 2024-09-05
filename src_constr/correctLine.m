@@ -1,4 +1,4 @@
-function [line_list,map_list,reverse_list]=correctLine(line_list,geom_torl)
+function [line_list,map_list,reverse_list]=correctLine(line_list,geom_tol)
 % correct line point order
 % order should be anti clockwise and start from first line
 %
@@ -11,7 +11,7 @@ line_idx=1;
 while line_idx <= line_num-1
     line_curr=line_list{line_idx};
     line_next=line_list{line_idx+1};
-    if norm(line_curr(end,:)-line_next(1,:)) > geom_torl
+    if norm(line_curr(end,:)-line_next(1,:)) > geom_tol
         % load remain line all vertex
         vertex_list=zeros((line_num-line_idx)*2,size(line_curr,2));
         for remain_idx=line_idx+1:line_num
@@ -22,7 +22,7 @@ while line_idx <= line_num-1
 
         % search next connect point
         dist=vecnorm((line_curr(end,:)-vertex_list),2,2);
-        overlap_idx=find(dist < geom_torl,1);
+        overlap_idx=find(dist < geom_tol,1);
         if ~any(overlap_idx)
             if line_idx == 1 && ~reverse_list(1)
                 % check if reverse first line can save

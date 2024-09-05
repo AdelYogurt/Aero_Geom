@@ -24,17 +24,19 @@ classdef CurveCST
         u_knotvctr=[0,0,1,1]; % curve knot_vector
         u_order=1; % curve degree
 
-        shape_fcn=[]; % function handle
+        shape_fcn=[]; % function handle, pnts=shape_fcn(us)
 
         % bias parameter
         B1=0;
         B2=0;
 
-        bias_fcn=[]; % function handle
+        bias_fcn=[]; % function handle, pnts=bias_fcn(us)
 
         coord=[]; % coordination of curve, [Ax1,Ax2]
         origin=[]; % origin point of coordination
         sym=false; % if true, u_class will start from 0.5 to 1
+        u_closed=false; % Periodic/closed_curve (boolean)
+        intersected=false; % self_intersect (boolean)
 
         deriv_crv=[];
     end
@@ -384,15 +386,15 @@ classdef CurveCST
                 ln_hdl=line(axe_hdl,pnts(:,1),pnts(:,2),crv_option);
             elseif self.coef_dim-1 == 3
                 ln_hdl=line(axe_hdl,pnts(:,1),pnts(:,2),pnts(:,3),crv_option);
-                zlabel('z');
+                zlabel('\itZ');
             end
-            xlabel('x');
-            ylabel('y');
+            xlabel('\itX');
+            ylabel('\itY');
 
             if nargout > 0, varargout={ln_hdl};end
         end
 
-        function varargout=displayPoles(self,axe_hdl,pole_option)
+        function varargout=displayPole(self,axe_hdl,pole_option)
             % draw curve on figure handle
             %
             if nargin < 3
@@ -438,10 +440,10 @@ classdef CurveCST
                 ln_hdl=line(axe_hdl,poles(:,1),poles(:,2),pole_option);
             elseif self.coef_dim-1 == 3
                 ln_hdl=line(axe_hdl,poles(:,1),poles(:,2),poles(:,3),pole_option);
-                zlabel('z');
+                zlabel('\itZ');
             end
-            xlabel('x');
-            ylabel('y');
+            xlabel('\itX');
+            ylabel('\itY');
 
             if nargout > 0, varargout={ln_hdl};end
         end
@@ -470,10 +472,10 @@ classdef CurveCST
                 hold on;
                 quv_hdl(1)=quiver3(axe_hdl,origin(1),origin(2),origin(3),coord(1,1),coord(2,1),coord(3,1),0,'Color','r');
                 hold off;
-                zlabel('z');
+                zlabel('\itZ');
             end
-            xlabel('x');
-            ylabel('y');
+            xlabel('\itX');
+            ylabel('\itY');
 
             if nargout > 0, varargout={quv_hdl};end
         end
@@ -801,20 +803,20 @@ classdef CurveCST
     end
 
     methods % calculate coord
-        function u_list=calCoordinate(self,pnts_init,geom_torl)
+        function u_list=calCoordinate(self,pnts_init,geom_tol)
             % base on X, Y, Z calculate local coordinate in curve
             %
-            if nargin < 3, geom_torl=[];end
-            if isempty(geom_torl), geom_torl=sqrt(eps);end
+            if nargin < 3, geom_tol=[];end
+            if isempty(geom_tol), geom_tol=sqrt(eps);end
 
             % find point to start
             u_list=self.findNearest(pnts_init,20);
 
             % use project function to adjust parameter
-            u_list=self.projectPoint(pnts_init,geom_torl,u_list);
+            u_list=self.projectPoint(pnts_init,geom_tol,u_list);
         end
 
-        function u_list=projectPoint(self,pnts_init,geom_torl,u_list)
+        function u_list=projectPoint(self,pnts_init,geom_tol,u_list)
             % adjust U by Jacobian transformation
             % also can project point to curve
             %
@@ -824,10 +826,10 @@ classdef CurveCST
             if nargin < 4
                 u_list=[];
                 if nargin < 3
-                    geom_torl=[];
+                    geom_tol=[];
                 end
             end
-            if isempty(geom_torl), geom_torl=sqrt(eps);end
+            if isempty(geom_tol), geom_tol=sqrt(eps);end
             self=self.deriv(1);
 
             % find point to start
@@ -835,7 +837,7 @@ classdef CurveCST
                 u_list=self.findNearest(pnts_init,20);
             end
             [pnt_num,~]=size(pnts_init);u_list=u_list(:);
-            u_min=0+geom_torl;u_max=1-geom_torl;
+            u_min=0+geom_tol;u_max=1-geom_tol;
 
             % iteration
             iter=0;iter_max=50;
@@ -854,7 +856,7 @@ classdef CurveCST
                 u_list(pnt_idx)=u_list(pnt_idx)+dus;
                 u_list=max(u_list,u_min);u_list=min(u_list,u_max);
 
-                pnt_idx=pnt_idx((abs(RU_D) > geom_torl));
+                pnt_idx=pnt_idx((abs(RU_D) > geom_tol));
 
                 % pnts_inv=self.calPoint(u_list);
                 % scatter3(pnts_inv(:,1),pnts_inv(:,2),pnts_inv(:,3));

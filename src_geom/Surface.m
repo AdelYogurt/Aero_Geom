@@ -403,15 +403,15 @@ classdef Surface
                 srf_hdl=surface(axe_hdl,pnts(:,:,1)',pnts(:,:,2)',zeros(size(pnts(:,:,1)')),srf_option);
             else
                 srf_hdl=surface(axe_hdl,pnts(:,:,1)',pnts(:,:,2)',pnts(:,:,3)',srf_option);
-                zlabel('z');
+                zlabel('\itZ');
             end
-            xlabel('x');
-            ylabel('y');
+            xlabel('\itX');
+            ylabel('\itY');
 
             if nargout > 0, varargout={srf_hdl};end
         end
 
-        function varargout=displayPoles(self,axe_hdl,pole_option)
+        function varargout=displayPole(self,axe_hdl,pole_option)
             % draw curve on figure handle
             %
             if nargin < 3
@@ -433,10 +433,10 @@ classdef Surface
                 srf_hdl=surface(axe_hdl,poles(:,:,1)',poles(:,:,2)',pole_option);
             else
                 srf_hdl=surface(axe_hdl,poles(:,:,1)',poles(:,:,2)',poles(:,:,3)',pole_option);
-                zlabel('z');
+                zlabel('\itZ');
             end
-            xlabel('x');
-            ylabel('y');
+            xlabel('\itX');
+            ylabel('\itY');
 
             if nargout > 0, varargout={srf_hdl};end
         end
@@ -473,11 +473,11 @@ classdef Surface
                 quv_hdl(1)=quiver3(axe_hdl,origin(1),origin(2),origin(3),coord(1,1),coord(2,1),coord(3,1),0,'Color','r');
                 quv_hdl(2)=quiver3(axe_hdl,origin(1),origin(2),origin(3),coord(1,2),coord(2,2),coord(3,2),0,'Color','g');
                 hold off;
-                zlabel('z');
+                zlabel('\itZ');
                 
             end
-            xlabel('x');
-            ylabel('y');
+            xlabel('\itX');
+            ylabel('\itY');
 
             if nargout > 0, varargout={quv_hdl};end
         end
@@ -607,20 +607,20 @@ classdef Surface
     end
 
     methods % calculate coord
-        function uv_list=calCoordinate(self,pnts_init,geom_torl)
+        function uv_list=calCoordinate(self,pnts_init,geom_tol)
             % base on X, Y, Z calculate local coordinate in surface
             %
-            if nargin < 3, geom_torl=[];end
-            if isempty(geom_torl), geom_torl=sqrt(eps);end
+            if nargin < 3, geom_tol=[];end
+            if isempty(geom_tol), geom_tol=sqrt(eps);end
 
             % find point to start
             uv_list=self.findNearest(pnts_init,20);
 
             % use project function to adjust parameter
-            uv_list=self.projectPoint(pnts_init,geom_torl,uv_list);
+            uv_list=self.projectPoint(pnts_init,geom_tol,uv_list);
         end
 
-        function uv_list=projectPoint(self,pnts_init,geom_torl,uv_list)
+        function uv_list=projectPoint(self,pnts_init,geom_tol,uv_list)
             % adjust U, V by Jacobian transformation
             % also can project point to surface
             %
@@ -630,10 +630,10 @@ classdef Surface
             if nargin < 4
                 uv_list=[];
                 if nargin < 3
-                    geom_torl=[];
+                    geom_tol=[];
                 end
             end
-            if isempty(geom_torl), geom_torl=sqrt(eps);end
+            if isempty(geom_tol), geom_tol=sqrt(eps);end
             self=self.deriv(1);
 
             % find point to start
@@ -669,7 +669,7 @@ classdef Surface
                 uv_list(pnt_idx,:)=uv_list(pnt_idx,:)+[dus,dvs];
                 uv_list=max(uv_list,uv_min);uv_list=min(uv_list,uv_max);
 
-                pnt_idx=pnt_idx((abs(RU_D)+abs(RV_D) > geom_torl));
+                pnt_idx=pnt_idx((abs(RU_D)+abs(RV_D) > geom_tol));
 
                 % pnts_inv=self.calPoint(uv_list);
                 % scatter3(pnts_inv(:,1),pnts_inv(:,2),pnts_inv(:,3));

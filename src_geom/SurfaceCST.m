@@ -36,8 +36,7 @@ classdef SurfaceCST
         u_order=1; % surface u_degree
         v_order=1; % surface v_degree
 
-        % pnts=shape_fcn(us, vs)
-        shape_fcn=[]; % function handle
+        shape_fcn=[]; % function handle, pnts=shape_fcn(us, vs)
 
         % bias parameter
         B11=0;
@@ -45,13 +44,15 @@ classdef SurfaceCST
         B12=0;
         B22=0;
 
-        % pnts=shape_fcn(us, vs)
-        bias_fcn=[]; % function handle
+        bias_fcn=[]; % function handle, pnts=shape_fcn(us, vs)
 
         coord=[]; % coordination of curve, [Ax1,Ax2,Ax3]
         origin=[]; % origin point of coordination
         sym_x; % if true, u_class fcn will start from 0.5 to 1
         sym_y; % if true, v_class fcn will start from 0.5 to 1
+        u_closed=false; % UPeriodic (boolean)
+        v_closed=false; % VPeriodic (boolean)
+        intersected=false; % self_intersect (boolean)
 
         u_deriv_srf=[];
         v_deriv_srf=[];
@@ -549,15 +550,15 @@ classdef SurfaceCST
             %     srf_hdl=surface(axe_hdl,pnts(:,:,1)',pnts(:,:,2)',srf_option);
             % else
             srf_hdl=surface(axe_hdl,pnts(:,:,1)',pnts(:,:,2)',pnts(:,:,3)',srf_option);
-            zlabel('z');
+            zlabel('\itZ');
             % end
-            xlabel('x');
-            ylabel('y');
+            xlabel('\itX');
+            ylabel('\itY');
 
             if nargout > 0, varargout={srf_hdl};end
         end
 
-        function varargout=displayPoles(self,axe_hdl,pole_option)
+        function varargout=displayPole(self,axe_hdl,pole_option)
             % draw surface on axes handle
             %
             if nargin < 3
@@ -616,10 +617,10 @@ classdef SurfaceCST
             %     srf_hdl=surface(axe_hdl,pnts(:,:,1)',pnts(:,:,2)',pole_option);
             % else
             srf_hdl=surface(axe_hdl,poles(:,:,1)',poles(:,:,2)',poles(:,:,3)',pole_option);
-            zlabel('z');
+            zlabel('\itZ');
             % end
-            xlabel('x');
-            ylabel('y');
+            xlabel('\itX');
+            ylabel('\itY');
 
             if nargout > 0, varargout={srf_hdl};end
         end
@@ -650,10 +651,10 @@ classdef SurfaceCST
             quv_hdl(1)=quiver3(axe_hdl,origin(1),origin(2),origin(3),coord(1,1),coord(2,1),coord(3,1),0,'Color','r');
             quv_hdl(2)=quiver3(axe_hdl,origin(1),origin(2),origin(3),coord(1,2),coord(2,2),coord(3,2),0,'Color','g');
             hold off;
-            zlabel('z');
+            zlabel('\itZ');
             % end
-            xlabel('x');
-            ylabel('y');
+            xlabel('\itX');
+            ylabel('\itY');
 
             if nargout > 0, varargout={quv_hdl};end
         end
@@ -868,20 +869,20 @@ classdef SurfaceCST
     end
 
     methods % calculate coord
-        function uv_list=calCoordinate(self,pnts_init,geom_torl)
+        function uv_list=calCoordinate(self,pnts_init,geom_tol)
             % base on X, Y, Z calculate local coordinate in surface
             %
-            if nargin < 3, geom_torl=[];end
-            if isempty(geom_torl), geom_torl=sqrt(eps);end
+            if nargin < 3, geom_tol=[];end
+            if isempty(geom_tol), geom_tol=sqrt(eps);end
 
             % find point to start
             uv_list=self.findNearest(pnts_init,20);
 
             % use project function to adjust parameter
-            uv_list=self.projectPoint(pnts_init,geom_torl,uv_list);
+            uv_list=self.projectPoint(pnts_init,geom_tol,uv_list);
         end
 
-        function uv_list=projectPoint(self,pnts_init,geom_torl,uv_list)
+        function uv_list=projectPoint(self,pnts_init,geom_tol,uv_list)
             % adjust U, V by Jacobian transformation
             % also can project point to surface
             %
@@ -891,10 +892,10 @@ classdef SurfaceCST
             if nargin < 4
                 uv_list=[];
                 if nargin < 3
-                    geom_torl=[];
+                    geom_tol=[];
                 end
             end
-            if isempty(geom_torl), geom_torl=sqrt(eps);end
+            if isempty(geom_tol), geom_tol=sqrt(eps);end
             self=self.deriv(1);
 
             % find point to start
@@ -902,7 +903,7 @@ classdef SurfaceCST
                 uv_list=self.findNearest(pnts_init,20);
             end
             [pnt_num,~]=size(pnts_init);
-            uv_min=[0+geom_torl,0+geom_torl];uv_max=[1-geom_torl,1-geom_torl];
+            uv_min=[0+geom_tol,0+geom_tol];uv_max=[1-geom_tol,1-geom_tol];
 
             % iteration
             iter=0;iter_max=50;
@@ -929,7 +930,7 @@ classdef SurfaceCST
                 uv_list(pnt_idx,:)=uv_list(pnt_idx,:)+[dus,dvs];
                 uv_list=max(uv_list,uv_min);uv_list=min(uv_list,uv_max);
 
-                pnt_idx=pnt_idx((abs(RU_D)+abs(RV_D) > geom_torl));
+                pnt_idx=pnt_idx((abs(RU_D)+abs(RV_D) > geom_tol));
 
                 % pnts_inv=self.calPoint(uv_list);
                 % scatter3(pnts_inv(:,1),pnts_inv(:,2),pnts_inv(:,3));

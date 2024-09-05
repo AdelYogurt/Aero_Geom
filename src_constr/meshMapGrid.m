@@ -14,10 +14,10 @@ function Point=meshMapGrid(line_u0,line_u1,line_0v,line_1v,u_list,v_list)
 %
 if nargin < 6,v_list=[];if nargin < 5,u_list=[];end;end
 
-geom_torl=100*eps;
+geom_tol=100*eps;
 line_list={line_u0,line_1v,flipud(line_u1),flipud(line_0v)};
-line_list=GeomApp.correctLine(line_list,geom_torl);
-if ~any(norm(line_list{4}(end,:)-line_list{1}(1,:)) < geom_torl)
+line_list=GeomApp.correctLine(line_list,geom_tol);
+if ~any(norm(line_list{4}(end,:)-line_list{1}(1,:)) < geom_tol)
     error('GeomApp.MapGrid: line not connect');
 end
 

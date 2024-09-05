@@ -1,9 +1,9 @@
-function crv=curveGlue(crv_list,geom_torl)
+function crv=curveGlue(crv_list,geom_tol)
 % connect BSpline curve into one curve
 %
-if nargin < 3,geom_torl=[];end
+if nargin < 3,geom_tol=[];end
 
-if isempty(geom_torl),geom_torl=100*eps;end
+if isempty(geom_tol),geom_tol=100*eps;end
 
 % search max order
 order_tar=0;
@@ -26,7 +26,7 @@ line_list=cell(1,crv_num);
 for crv_idx=1:crv_num
     line_list{crv_idx}=crv_list(crv_idx).coefs;
 end
-[~,map_list,order_list]=correctLine(line_list,geom_torl);
+[~,map_list,order_list]=correctLine(line_list,geom_tol);
 crv_list=crv_list(map_list);
 for crv_idx=1:crv_num
     if order_list(crv_idx),crv_list(crv_idx)=crv_list(crv_idx).reverseU();end

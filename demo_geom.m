@@ -16,7 +16,7 @@ scatter3(axe_hdl,pnts(:,1),pnts(:,2),pnts(:,3),'Marker','*','MarkerEdgeColor',[0
 
 crv=Curve(pnts,deg);
 crv.displayGeom(axe_hdl);
-crv.displayPoles(axe_hdl);
+crv.displayPole(axe_hdl);
 
 crv=interpPointToCurve(pnts,deg);
 crv.displayGeom(axe_hdl,struct('color',[0.9290 0.6940 0.1250]));
@@ -35,11 +35,11 @@ pole_num=5;deg=4;
 pnt_list=[linspace(0,1,pole_num)',rand(pole_num,1)*0.12];
 crv=crv.addSpline(pnt_list,deg);
 crv.displayGeom(axe_hdl);
-crv.displayPoles(axe_hdl);
+crv.displayPole(axe_hdl);
 
 crv=crv.convertSpline();
 crv.displayGeom(axe_hdl,struct('Color','g','LineStyle','--'));
-crv.displayPoles(axe_hdl,struct('Color','k','LineStyle','-.','Marker','s'));
+crv.displayPole(axe_hdl,struct('Color','k','LineStyle','-.','Marker','s'));
 
 %% fit airfoil with CST curve
 
@@ -93,7 +93,7 @@ pnts=cat(3,pnts_x,pnts_y,pnts_z);
 
 srf=Surface(pnts,u_deg,v_deg);
 srf.displayGeom(axe_hdl);
-srf.displayPoles(axe_hdl);
+srf.displayPole(axe_hdl);
 axis equal;view(3);title('demo of surface');
 
 srf=interpPointToSurface(pnts,u_deg,v_deg);
@@ -113,11 +113,11 @@ pnt_num=5;u_deg=3;v_deg=3;
 pnts=cat(3,pnts_x,pnts_y,pnts_z);
 srf=srf.addSpline(pnts,u_deg,v_deg);
 srf.displayGeom(axe_hdl);
-srf.displayPoles(axe_hdl);
+srf.displayPole(axe_hdl);
 
 srf=srf.convertSpline();
 srf.displayGeom(axe_hdl,struct('FaceColor','g','FaceAlpha',0.5,'LineStyle','none'));
-srf.displayPoles(axe_hdl,struct('FaceAlpha',0,'MarkerEdgeColor','k','LineStyle','-.','Marker','s'));
+srf.displayPole(axe_hdl,struct('FaceAlpha',0,'MarkerEdgeColor','k','LineStyle','-.','Marker','s'));
 
 %% mapping generate surface
 
@@ -139,7 +139,7 @@ crv_2v.displayGeom(axe_hdl);
 srf=constrSurfaceBound(crv_u1,crv_u2,crv_1v,crv_2v);
 
 srf.displayGeom(axe_hdl,struct('LineStyle','none','FaceAlpha',0.5));
-srf.displayPoles(axe_hdl);
+srf.displayPole(axe_hdl);
 axis equal;view(3);title('demo of bounding form surface');
 
 %% fit wing with CST surface
@@ -160,9 +160,9 @@ srf_L=srf_L.fitSpline(cat(3,X_L,Y_L,Z_L),u_degree,v_degree,u_pole_num,v_pole_num
 
 axe_hdl=axes(figure());
 srf_U.displayGeom(axe_hdl);
-srf_U.displayPoles(axe_hdl);
+srf_U.displayPole(axe_hdl);
 srf_L.displayGeom(axe_hdl);
-srf_L.displayPoles(axe_hdl);
+srf_L.displayPole(axe_hdl);
 axis equal;view(3);title('demo of CST surface fitting wing');
 
 %% volume
@@ -177,5 +177,5 @@ pnts=cat(4,repmat(pnts_x,[1,1,2]),repmat(pnts_y,[1,1,2]),cat(3,pnts_z1,pnts_z2))
 
 vol=Volume(pnts,u_deg,v_deg,w_deg);
 vol.displayGeom(axe_hdl);
-vol.displayPoles(axe_hdl);
+vol.displayPole(axe_hdl);
 view(3);axis equal;title('demo of volume');

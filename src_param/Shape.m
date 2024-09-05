@@ -1,11 +1,14 @@
 classdef Shape < handle
-    properties % geometry list
-        geom_topo;
-        crv_list;
-        srf_list;
+    properties % entity list
+        topology;
+        edge_list;
+        face_list;
 
-        crv_name_list;
-        srf_name_list;
+        curve_list;
+        surface_list;
+
+        curve_name_list;
+        surface_name_list;
     end
 
     methods % define function
@@ -29,8 +32,8 @@ classdef Shape < handle
                     end
                 end
 
-                self.srf_list=srf_list;
-                self.srf_name_list=srf_name_list;
+                self.face_list=srf_list;
+                self.surface_name_list=srf_name_list;
 
                 % generate shape topology properties
                 %                 self.propagateKnotVectors();
@@ -46,9 +49,9 @@ classdef Shape < handle
             %
             crv=[];
             crv_idx=[];
-            for crv_i=1:length(self.crv_list)
-                if strcmpi(self.crv_name_list{crv_i},crv_name)
-                    crv=self.srf_list(crv_i);
+            for crv_i=1:length(self.edge_list)
+                if strcmpi(self.curve_name_list{crv_i},crv_name)
+                    crv=self.face_list(crv_i);
                     crv_idx=crv_i;
                     return;
                 end
@@ -60,9 +63,9 @@ classdef Shape < handle
             %
             srf=[];
             srf_idx=[];
-            for srf_i=1:length(self.srf_list)
-                if strcmpi(self.srf_name_list{srf_i},srf_name)
-                    srf=self.srf_list(srf_i);
+            for srf_i=1:length(self.face_list)
+                if strcmpi(self.surface_name_list{srf_i},srf_name)
+                    srf=self.face_list(srf_i);
                     srf_idx=srf_i;
                     return;
                 end
@@ -81,7 +84,7 @@ classdef Shape < handle
             if isempty(sym_dir),sym_dir=0;end
 
             % calculate each surface point
-            srf_num=length(self.srf_list);
+            srf_num=length(self.face_list);
             if sym_dir
                 crd_list=repmat(struct('U',[],'V',[]),srf_num*2,1);
                 grd_list=repmat(struct('T',[],'X',[],'Y',[],'Z',[],'name',[],'type',[],'orientation',[]),srf_num*2,1);
@@ -91,7 +94,7 @@ classdef Shape < handle
             end
 
             for srf_idx=1:srf_num
-                srf=self.srf_list(srf_idx);
+                srf=self.face_list(srf_idx);
 
                 % calculate surface point
                 [pnts,us,vs]=srf.calGeom(param);
@@ -100,7 +103,7 @@ classdef Shape < handle
                 grd.X=pnts(:,:,1)';
                 grd.Y=pnts(:,:,2)';
                 grd.Z=pnts(:,:,3)';
-                grd.name=self.srf_name_list{srf_idx};
+                grd.name=self.surface_name_list{srf_idx};
                 grd.type='wgs';
                 grd.orientation=0;
 
@@ -118,7 +121,7 @@ classdef Shape < handle
                     grd.X=pnts(:,:,1)';
                     grd.Y=pnts(:,:,2)';
                     grd.Z=pnts(:,:,3)';
-                    grd.name=self.srf_name_list{srf_idx};
+                    grd.name=self.surface_name_list{srf_idx};
                     grd.type='wgs';
                     grd.orientation=1;
 
@@ -173,7 +176,7 @@ classdef Shape < handle
             if nargin < 2,iges_filestr=[];end
             if isempty(iges_filestr),iges_filestr='geom.iges';end
 
-            writeGeomIGES(num2cell(self.srf_list),iges_filestr);
+            writeGeomIGES(num2cell(self.face_list),iges_filestr);
         end
 
         function varargout=displayGeom(self,axe_hdl,srf_option,param,sym_dir)
@@ -213,9 +216,9 @@ classdef Shape < handle
                 text(axe_hdl,mean(grd.X,"all"),mean(grd.Y,"all"),mean(grd.Z,"all"),grd.name);
             end
 
-            xlabel('x');
-            ylabel('y');
-            zlabel('z');
+            xlabel('\itX');
+            ylabel('\itY');
+            zlabel('\itZ');
 
             varargout={};
             if nargout > 0
@@ -231,14 +234,14 @@ classdef Shape < handle
             end
             if isempty(axe_hdl),axe_hdl=gca();end
 
-            srf_num=length(self.srf_list);
+            srf_num=length(self.face_list);
             for srf_idx=1:srf_num
-                srf=self.srf_list(srf_idx);
+                srf=self.face_list(srf_idx);
                 quv_hdl_list{srf_idx}=srf.displayDirect(axe_hdl);
             end
-            xlabel('x');
-            ylabel('y');
-            zlabel('z');
+            xlabel('\itX');
+            ylabel('\itY');
+            zlabel('\itZ');
 
             varargout={};
             if nargout > 0
@@ -251,24 +254,24 @@ classdef Shape < handle
         function self=updateSurfaceCoef(self)
             % Copy the pyGeo list of control points back to the surfaces
             for ii=1:length(self.coef)
-                for jj=1:length(self.geom_topo.gIndex{ii})
-                    srf_idx=self.geom_topo.gIndex{ii}(jj,1);
-                    i=self.geom_topo.gIndex{ii}(jj,2);
-                    j=self.geom_topo.gIndex{ii}(jj,3);
-                    self.srf_list{srf_idx}.coef(i,j)=double(self.coef(ii));
+                for jj=1:length(self.topology.gIndex{ii})
+                    srf_idx=self.topology.gIndex{ii}(jj,1);
+                    i=self.topology.gIndex{ii}(jj,2);
+                    j=self.topology.gIndex{ii}(jj,3);
+                    self.face_list{srf_idx}.coef(i,j)=double(self.coef(ii));
                 end
             end
 
-            for srf_idx=1:length(self.srf_list)
-                self.srf_list(srf_idx).setEdgeCurves();
+            for srf_idx=1:length(self.face_list)
+                self.face_list(srf_idx).setEdgeCurves();
             end
         end
 
         function self=setSurfaceCoef(self)
             % Set the surface coef list from the pyspline surfaces
-            self.coef=zeros(self.geom_topo.nGlobal,3);
-            for srf_idx=1:length(self.srf_list)
-                srf=self.srf_list(srf_idx);
+            self.coef=zeros(self.topology.nGlobal,3);
+            for srf_idx=1:length(self.face_list)
+                srf=self.face_list(srf_idx);
                 for i=1:srf.nCtlu
                     for j=1:srf.nCtlv
                         self.coef(self.topo.lIndex{srf_idx}(i,j),:)=srf.coef(i,j);
@@ -287,33 +290,33 @@ classdef Shape < handle
             %   nodeTol (double): The tolerance for identical nodes
             %   edgeTol (double): The tolerance for midpoint of edges being identical
 
-            srf_num=length(self.srf_list);
+            srf_num=length(self.face_list);
             if nargin > 1 && exist(fileName,'file')
                 fprintf('Reading Connectivity File: %s\n',fileName);
-                self.geom_topo=SurfaceTopology(fileName);
+                self.topology=SurfaceTopology(fileName);
                 if ~strcmp(self.initType,'iges')
                     self.propagateKnotVectors();
                 end
 
                 sizes=zeros(srf_num,2);
                 for isurf=1:srf_num
-                    sizes(isurf,:)=[self.srf_list(isurf).nCtlu,self.srf_list(isurf).nCtlv];
-                    self.srf_list(isurf).recompute();
+                    sizes(isurf,:)=[self.face_list(isurf).nCtlu,self.face_list(isurf).nCtlv];
+                    self.face_list(isurf).recompute();
                 end
-                self.geom_topo.calcGlobalNumbering(sizes);
+                self.topology.calcGlobalNumbering(sizes);
             else
                 self.calcConnectivity(nodeTol,edgeTol);
                 sizes=zeros(srf_num,2);
                 for isurf=1:srf_num
-                    sizes(isurf,:)=[self.srf_list(isurf).nCtlu,self.srf_list(isurf).nCtlv];
+                    sizes(isurf,:)=[self.face_list(isurf).nCtlu,self.face_list(isurf).nCtlv];
                 end
-                self.geom_topo.calcGlobalNumbering(sizes);
+                self.topology.calcGlobalNumbering(sizes);
                 if ~strcmp(self.initType,'iges')
                     self.propagateKnotVectors();
                 end
                 if nargin > 1
                     fprintf('Writing Connectivity File: %s\n',fileName);
-                    self.geom_topo.writeConnectivity(fileName);
+                    self.topology.writeConnectivity(fileName);
                 end
             end
 
@@ -327,30 +330,30 @@ classdef Shape < handle
             % between the patches
 
             % Calculate the 4 corners and 4 midpoints for each surface
-            srf_num=length(self.srf_list);
+            srf_num=length(self.face_list);
             coords=zeros(srf_num,8,3);
 
             for isurf=1:srf_num
-                beg,mid,e=self.srf_list(isurf).getOrigValuesEdge(1);
+                beg,mid,e=self.face_list(isurf).getOrigValuesEdge(1);
                 coords(isurf,1,:)=beg;
                 coords(isurf,2,:)=e;
                 coords(isurf,5,:)=mid;
-                beg,mid,e=self.srf_list(isurf).getOrigValuesEdge(2);
+                beg,mid,e=self.face_list(isurf).getOrigValuesEdge(2);
                 coords(isurf,3,:)=beg;
                 coords(isurf,4,:)=e;
                 coords(isurf,6,:)=mid;
-                beg,mid,e=self.srf_list(isurf).getOrigValuesEdge(3);
+                beg,mid,e=self.face_list(isurf).getOrigValuesEdge(3);
                 coords(isurf,7,:)=mid;
-                beg,mid,e=self.srf_list(isurf).getOrigValuesEdge(4);
+                beg,mid,e=self.face_list(isurf).getOrigValuesEdge(4);
                 coords(isurf,8,:)=mid;
             end
 
-            self.geom_topo=SurfaceTopology(coords,nodeTol,edgeTol);
+            self.topology=SurfaceTopology(coords,nodeTol,edgeTol);
         end
 
         function printConnectivity(self)
             % Print the Edge connectivity to the screen
-            self.geom_topo.printConnectivity();
+            self.topology.printConnectivity();
         end
 
         function propagateKnotVectors(self)
@@ -359,35 +362,35 @@ classdef Shape < handle
             % First get the number of design groups
             nDG=-1;
             ncoef=[];
-            for i=1:self.geom_topo.nEdge
-                if self.geom_topo.edges(i).dg > nDG
-                    nDG=self.geom_topo.edges(i).dg;
-                    ncoef(end+1)=self.geom_topo.edges(i).N;
+            for i=1:self.topology.nEdge
+                if self.topology.edges(i).dg > nDG
+                    nDG=self.topology.edges(i).dg;
+                    ncoef(end+1)=self.topology.edges(i).N;
                 end
             end
             nDG=nDG+1;
 
-            srf_num=length(self.srf_list);
+            srf_num=length(self.face_list);
             for isurf=1:srf_num
-                dgU=self.geom_topo.edges(self.geom_topo.edgeLink(isurf,1)).dg;
-                dgV=self.geom_topo.edges(self.geom_topo.edgeLink(isurf,3)).dg;
-                self.srf_list(isurf).nCtlu=ncoef(dgU);
-                self.srf_list(isurf).nCtlv=ncoef(dgV);
-                if self.srf_list(isurf).ku < self.srf_list(isurf).nCtlu
-                    if self.srf_list(isurf).nCtlu > 4
-                        self.srf_list(isurf).ku=4;
+                dgU=self.topology.edges(self.topology.edgeLink(isurf,1)).dg;
+                dgV=self.topology.edges(self.topology.edgeLink(isurf,3)).dg;
+                self.face_list(isurf).nCtlu=ncoef(dgU);
+                self.face_list(isurf).nCtlv=ncoef(dgV);
+                if self.face_list(isurf).ku < self.face_list(isurf).nCtlu
+                    if self.face_list(isurf).nCtlu > 4
+                        self.face_list(isurf).ku=4;
                     else
-                        self.srf_list(isurf).ku=self.srf_list(isurf).nCtlu;
+                        self.face_list(isurf).ku=self.face_list(isurf).nCtlu;
                     end
                 end
-                if self.srf_list(isurf).kv < self.srf_list(isurf).nCtlv
-                    if self.srf_list(isurf).nCtlv > 4
-                        self.srf_list(isurf).kv=4;
+                if self.face_list(isurf).kv < self.face_list(isurf).nCtlv
+                    if self.face_list(isurf).nCtlv > 4
+                        self.face_list(isurf).kv=4;
                     else
-                        self.srf_list(isurf).kv=self.srf_list(isurf).nCtlv;
+                        self.face_list(isurf).kv=self.face_list(isurf).nCtlv;
                     end
                 end
-                self.srf_list(isurf).calcKnots();
+                self.face_list(isurf).calcKnots();
             end
 
             % Now loop over the number of design groups,accumulate all
@@ -397,16 +400,16 @@ classdef Shape < handle
                 flip=[];
                 for isurf=1:srf_num
                     for iedge=1:4
-                        if self.geom_topo.edges(self.geom_topo.edgeLink(isurf,iedge)).dg == idg
-                            if self.geom_topo.edgeDir(isurf,iedge) == -1
+                        if self.topology.edges(self.topology.edgeLink(isurf,iedge)).dg == idg
+                            if self.topology.edgeDir(isurf,iedge) == -1
                                 flip(end+1)=true;
                             else
                                 flip(end+1)=false;
                             end
                             if iedge <= 2
-                                knotVec=self.srf_list(isurf).tu;
+                                knotVec=self.face_list(isurf).tu;
                             else
-                                knotVec=self.srf_list(isurf).tv;
+                                knotVec=self.face_list(isurf).tv;
                             end
                             if flip(end)
                                 knotVectors(end+1)=fliplr(1 - knotVec);
@@ -424,18 +427,18 @@ classdef Shape < handle
                 counter=1;
                 for isurf=1:srf_num
                     for iedge=1:4
-                        if self.geom_topo.edges(self.geom_topo.edgeLink(isurf,iedge)).dg == idg
+                        if self.topology.edges(self.topology.edgeLink(isurf,iedge)).dg == idg
                             if iedge <= 2
                                 if flip(counter)
-                                    self.srf_list(isurf).tu=newKnotVecFlip;
+                                    self.face_list(isurf).tu=newKnotVecFlip;
                                 else
-                                    self.srf_list(isurf).tu=newKnotVec;
+                                    self.face_list(isurf).tu=newKnotVec;
                                 end
                             else
                                 if flip(counter)
-                                    self.srf_list(isurf).tv=newKnotVecFlip;
+                                    self.face_list(isurf).tv=newKnotVecFlip;
                                 else
-                                    self.srf_list(isurf).tv=newKnotVec;
+                                    self.face_list(isurf).tv=newKnotVec;
                                 end
                             end
                             counter=counter+1;
@@ -451,12 +454,12 @@ classdef Shape < handle
         function self=translate(self,tran_vctr)
             % translate shape
             %
-            for crv_idx=1:length(self.crv_list)
-                self.crv_list(crv_idx)=self.crv_list(crv_idx).translate(tran_vctr);
+            for crv_idx=1:length(self.edge_list)
+                self.edge_list(crv_idx)=self.edge_list(crv_idx).translate(tran_vctr);
             end
 
-            for srf_idx=1:length(self.srf_list)
-                self.srf_list(srf_idx)=self.srf_list(srf_idx).translate(tran_vctr);
+            for srf_idx=1:length(self.face_list)
+                self.face_list(srf_idx)=self.face_list(srf_idx).translate(tran_vctr);
             end
         end
 
@@ -465,12 +468,12 @@ classdef Shape < handle
             %
             if nargin < 3 || isempty(rot_cntr), rot_cntr=[];end
 
-            for crv_idx=1:length(self.crv_list)
-                self.crv_list(crv_idx)=self.crv_list(crv_idx).rotate(rot_mat,rot_cntr);
+            for crv_idx=1:length(self.edge_list)
+                self.edge_list(crv_idx)=self.edge_list(crv_idx).rotate(rot_mat,rot_cntr);
             end
 
-            for srf_idx=1:length(self.srf_list)
-                self.srf_list(srf_idx)=self.srf_list(srf_idx).rotate(rot_mat,rot_cntr);
+            for srf_idx=1:length(self.face_list)
+                self.face_list(srf_idx)=self.face_list(srf_idx).rotate(rot_mat,rot_cntr);
             end
         end
     end

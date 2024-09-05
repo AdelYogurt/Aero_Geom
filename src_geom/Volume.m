@@ -409,18 +409,18 @@ classdef Volume
             for srf_idx=1:length(srf_list)
                 vol_hdl(srf_idx)=srf_list(srf_idx).displayGeom(axe_hdl,vol_option,param);
             end
-            xlabel('x');
-            ylabel('y');
-            zlabel('z');
+            xlabel('\itX');
+            ylabel('\itY');
+            zlabel('\itZ');
             
             if nargout > 0,varargout={vol_hdl};end
         end
 
-        function varargout=displayPoles(self,axe_hdl,pole_option)
+        function varargout=displayPole(self,axe_hdl,option)
             % draw curve on figure handle
             %
             if nargin < 3
-                pole_option=[];
+                option=[];
                 if nargin < 2
                     axe_hdl=[];
                 end
@@ -428,21 +428,23 @@ classdef Volume
             if isempty(axe_hdl),axe_hdl=gca();end
 
             % default draw option
-            if isempty(pole_option)
-                pole_option=struct('Marker','s','MarkerEdgeColor','r','EdgeColor','r','LineStyle','--','FaceAlpha',0);
+            surface_option=struct('Marker','s','MarkerEdgeColor','r','EdgeColor','r','LineStyle','--','FaceAlpha',0);
+            if ~isempty(option)
+                names=fieldnames(option);
+                for idx=1:length(names),surface_option.(names{idx})=option.(names{idx});end
             end
 
             % draw poles on axe_hdl
             [poles,~]=self.getPoles();
             for k_idx=1:self.w_coef_num
-                vol_hdl(k_idx)=surface(axe_hdl,squeeze(poles(:,:,k_idx,1))',squeeze(poles(:,:,k_idx,2))',squeeze(poles(:,:,k_idx,3))',pole_option);
+                vol_hdl(k_idx)=surface(axe_hdl,squeeze(poles(:,:,k_idx,1))',squeeze(poles(:,:,k_idx,2))',squeeze(poles(:,:,k_idx,3))',surface_option);
             end
             for i_idx=1:self.u_coef_num
-                vol_hdl(i_idx+self.w_coef_num)=surface(axe_hdl,squeeze(poles(i_idx,:,:,1))',squeeze(poles(i_idx,:,:,2))',squeeze(poles(i_idx,:,:,3))',pole_option);
+                vol_hdl(i_idx+self.w_coef_num)=surface(axe_hdl,squeeze(poles(i_idx,:,:,1))',squeeze(poles(i_idx,:,:,2))',squeeze(poles(i_idx,:,:,3))',surface_option);
             end
-            xlabel('x');
-            ylabel('y');
-            zlabel('z');
+            xlabel('\itX');
+            ylabel('\itY');
+            zlabel('\itZ');
             
             if nargout > 0,varargout={vol_hdl};end
         end
@@ -471,13 +473,13 @@ classdef Volume
             % draw coord on axe_hdl
             if self.coef_dim-1 == 3
                 hold on;
-                quv_hdl(1)=quiver3(axe_hdl,origin(1),origin(2),origin(3),coord(1,1),coord(2,1),coord(3,1),0,'Color','r');
-                quv_hdl(2)=quiver3(axe_hdl,origin(1),origin(2),origin(3),coord(1,2),coord(2,2),coord(3,2),0,'Color','g');
-                quv_hdl(3)=quiver3(axe_hdl,origin(1),origin(2),origin(3),coord(1,3),coord(2,3),coord(3,3),0,'Color','b');
+                quv_hdl(1)=quiver3(axe_hdl,origin(1),origin(2),origin(3),coord(1,1),coord(2,1),coord(3,1),0,'Color','r','LineWidth',1);
+                quv_hdl(2)=quiver3(axe_hdl,origin(1),origin(2),origin(3),coord(1,2),coord(2,2),coord(3,2),0,'Color','g','LineWidth',1);
+                quv_hdl(3)=quiver3(axe_hdl,origin(1),origin(2),origin(3),coord(1,3),coord(2,3),coord(3,3),0,'Color','b','LineWidth',1);
                 hold off;
-                xlabel('x');
-                ylabel('y');
-                zlabel('z');
+                xlabel('\itX');
+                ylabel('\itY');
+                zlabel('\itZ');
             end
 
             if nargout > 0,varargout={quv_hdl};end
@@ -641,20 +643,20 @@ classdef Volume
     end
 
     methods % calculate coord
-        function uvw_list=calCoordinate(self,pnts_init,geom_torl)
+        function uvw_list=calCoordinate(self,pnts_init,geom_tol)
             % base on X, Y, Z calculate local coordinate in volume
             %
-            if nargin < 3, geom_torl=[];end
-            if isempty(geom_torl), geom_torl=sqrt(eps);end
+            if nargin < 3, geom_tol=[];end
+            if isempty(geom_tol), geom_tol=sqrt(eps);end
 
             % find point to start
             uvw_list=self.findNearest(pnts_init,20);
 
             % use project function to adjust parameter
-            uvw_list=self.projectPoint(pnts_init,geom_torl,uvw_list);
+            uvw_list=self.projectPoint(pnts_init,geom_tol,uvw_list);
         end
 
-        function uvw_list=projectPoint(self,pnts_init,geom_torl,uvw_list)
+        function [uvw_list,unconv_idx]=projectPoint(self,pnts_init,geom_tol,uvw_list)
             % adjust U, V, W by Jacobian transformation
             % also can project point to volume
             %
@@ -664,10 +666,10 @@ classdef Volume
             if nargin < 4
                 uvw_list=[];
                 if nargin < 3
-                    geom_torl=[];
+                    geom_tol=[];
                 end
             end
-            if isempty(geom_torl), geom_torl=sqrt(eps);end
+            if isempty(geom_tol), geom_tol=sqrt(eps);end
             self=self.deriv(1);
 
             % find point to start
@@ -683,13 +685,13 @@ classdef Volume
             % iteration
             iter=0;iter_max=50;
             done=false;
-            pnt_idx=(1:pnt_num)';
+            unconv_idx=(1:pnt_num)';
             while ~done
-                [pnts,dpnt_duvs]=self.calGradient(uvw_list(pnt_idx,:));
+                [pnts,dpnt_duvs]=self.calGradient(uvw_list(unconv_idx,:));
                 dpnts_du=dpnt_duvs{1};
                 dpnts_dv=dpnt_duvs{2};
                 dpnts_dw=dpnt_duvs{3};
-                dpnt_list=pnts_init(pnt_idx,:)-pnts;
+                dpnt_list=pnts_init(unconv_idx,:)-pnts;
 
                 % Jacobian transformation
                 RU_RU=sum(dpnts_du.*dpnts_du,2);
@@ -709,22 +711,22 @@ classdef Volume
                 dvs(isnan(dvs) | isinf(dvs))=0;
                 dws(isnan(dws) | isinf(dws))=0;
 
-                uvw_list(pnt_idx,:)=uvw_list(pnt_idx,:)+[dus,dvs,dws];
+                uvw_list(unconv_idx,:)=uvw_list(unconv_idx,:)+[dus,dvs,dws];
                 uvw_list=max(uvw_list,uvw_min);uvw_list=min(uvw_list,uvw_max);
 
-                pnt_idx=pnt_idx((abs(RU_D)+abs(RV_D)+abs(RW_D) > geom_torl));
+                unconv_idx=unconv_idx((abs(RU_D)+abs(RV_D)+abs(RW_D) > geom_tol));
 
                 % pnts_inv=self.calPoint(uvw_list);
                 % scatter3(pnts_inv(1,:),pnts_inv(2,:),pnts_inv(3,:));
 
                 iter=iter+1;
-                if isempty(pnt_idx) || iter >= iter_max
+                if isempty(unconv_idx) || iter >= iter_max
                     done=true;
                 end
             end
         end
 
-        function uvw_list=findNearest(self,pnt_list,param)
+        function [uvw_list,dis_list]=findNearest(self,pnt_list,param)
             % find nearest U, V, W in grid
             %
             % input:
@@ -734,6 +736,8 @@ classdef Volume
             if nargin < 3, param=[];end
             if isempty(param), param=20;end
             pnt_num=size(pnt_list,1);
+            uvw_list=zeros(pnt_num,3);
+            dis_list=zeros(pnt_num,1);
 
             % generate rough mesh to initialize pre coord
             base_list=((0:(param-1))+(1:param))/2/param;
@@ -743,12 +747,12 @@ classdef Volume
             pnt_base_list=self.calPoint({u_base_list,v_base_list,w_base_list});
             [U,V,W]=ndgrid(u_base_list,v_base_list,w_base_list);
             uvw_base_list=[U(:),V(:),W(:)];
-            uvw_list=zeros(pnt_num,3);
             for pnt_idx=1:pnt_num
                 pnt=reshape(pnt_list(pnt_idx,:),1,1,1,[]);
                 dis_abs=vecnorm(pnt_base_list-pnt,2,4);
-                [~,idx]=min(dis_abs,[],"all");
+                [dis,idx]=min(dis_abs,[],"all");
                 uvw_list(pnt_idx,:)=uvw_base_list(idx(1),:);
+                dis_list(pnt_idx)=dis;
             end
         end
     end

@@ -1,8 +1,8 @@
-function srf=constrSurfaceBound(crv_u1,crv_u2,crv_1v,crv_2v,geom_torl)
+function srf=constrSurfaceBound(crv_u1,crv_u2,crv_1v,crv_2v,geom_tol)
 % curve to generate surface by coons methods
 %
 if nargin < 5
-    geom_torl=[];
+    geom_tol=[];
     if nargin < 4
         crv_2v=[];
         if nargin < 3
@@ -10,7 +10,7 @@ if nargin < 5
         end
     end
 end
-if isempty(geom_torl), geom_torl=1e-6;end
+if isempty(geom_tol), geom_tol=1e-6;end
 
 if (~isempty(crv_u1) && ~isempty(crv_u2)) || (~isempty(crv_1v) && ~isempty(crv_2v))
     if ~isempty(crv_u1) && ~isempty(crv_u2)
